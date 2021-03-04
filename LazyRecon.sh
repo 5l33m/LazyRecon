@@ -1,6 +1,7 @@
+
 #!/bin/bash
 
-VERSION="1.3"
+VERSION="1.0"
 
 TARGET=$1
 
@@ -23,13 +24,9 @@ RESET="\033[0m"
 
 displayLogo(){
 echo -e "
-██╗      █████╗ ███████╗██╗   ██╗██████╗ ███████╗ ██████╗ ██████╗ ███╗   ██╗
-██║     ██╔══██╗╚══███╔╝╚██╗ ██╔╝██╔══██╗██╔════╝██╔════╝██╔═══██╗████╗  ██║
-██║     ███████║  ███╔╝  ╚████╔╝ ██████╔╝█████╗  ██║     ██║   ██║██╔██╗ ██║
-██║     ██╔══██║ ███╔╝    ╚██╔╝  ██╔══██╗██╔══╝  ██║     ██║   ██║██║╚██╗██║
-███████╗██║  ██║███████╗   ██║   ██║  ██║███████╗╚██████╗╚██████╔╝██║ ╚████║
-╚══════╝╚═╝  ╚═╝╚══════╝   ╚═╝   ╚═╝  ╚═╝╚══════╝ ╚═════╝ ╚═════╝ ╚═╝  ╚═══  
-${RED}v$VERSION${RESET} by ${YELLOW}@CaptMeelo${RESET}
+ RECON
+╚══════╝
+${RED}v$VERSION${RESET} by ${YELLOW}@5133_m${RESET}
 "
 }
 
@@ -65,30 +62,30 @@ setupDir(){
 enumSubs(){
     echo -e "${GREEN}\n--==[ Enumerating subdomains ]==--${RESET}"
     runBanner "Amass"
-    ~/go/bin/amass -d $TARGET -o $SUB_PATH/amass.txt
+    /home/sleem/Projects/work/bin/amass enum -d $TARGET -o $SUB_PATH/amass.txt
 
-    runBanner "subfinder"
-    ~/go/bin/subfinder -d $TARGET -t 50 -b -w $WORDLIST_PATH/dns_all.txt $TARGET -nW --silent -o $SUB_PATH/subfinder.txt
+    #runBanner "subfinder"
+    #/home/sleem/Projects/work/src/github.com/subfinder/ -d $TARGET -t 50 -b -w $WORDLIST_PATH/dns_all.txt $TARGET -nW --silent -o $SUB_PATH/subfinder.txt
 
     echo -e "${RED}\n[+] Combining subdomains...${RESET}"
     cat $SUB_PATH/*.txt | sort | awk '{print tolower($0)}' | uniq > $SUB_PATH/final-subdomains.txt
     echo -e "${BLUE}[*] Check the list of subdomains at $SUB_PATH/final-subdomains.txt${RESET}"
 
-    echo -e "${GREEN}\n--==[ Checking for subdomain takeovers ]==--${RESET}"
-    runBanner "subjack"
-    ~/go/bin/subjack -a -ssl -t 50 -v -c ~/go/src/github.com/haccer/subjack/fingerprints.json -w $SUB_PATH/final-subdomains.txt -o $SUB_PATH/final-takeover.tmp
-    cat $SUB_PATH/final-takeover.tmp | grep -v "Not Vulnerable" > $SUB_PATH/final-takeover.txt
-    rm $SUB_PATH/final-takeover.tmp
-    echo -e "${BLUE}[*] Check subjack's result at $SUB_PATH/final-takeover.txt${RESET}"
+    #echo -e "${GREEN}\n--==[ Checking for subdomain takeovers ]==--${RESET}"
+    #runBanner "subjack"
+    #/home/sleem/Projects/work/src/github.com/haccer/subjack/ -a -ssl -t 50 -v -c ~/go/src/github.com/haccer/subjack/fingerprints.json -w $SUB_PATH/final-subdomains.txt -o $SUB_PATH/final-takeover.tmp
+    #cat $SUB_PATH/final-takeover.tmp | grep -v "Not Vulnerable" > $SUB_PATH/final-takeover.txt
+    #rm $SUB_PATH/final-takeover.tmp
+    #echo -e "${BLUE}[*] Check subjack's result at $SUB_PATH/final-takeover.txt${RESET}"
 }
 
 
-corsScan(){
-    echo -e "${GREEN}\n--==[ Checking CORS configuration ]==--${RESET}"
-    runBanner "CORScanner"
-    python $TOOLS_PATH/CORScanner/cors_scan.py -v -t 50 -i $SUB_PATH/final-subdomains.txt | tee $CORS_PATH/final-cors.txt
-    echo -e "${BLUE}[*] Check the result at $CORS_PATH/final-cors.txt${RESET}"
-}
+#corsScan(){
+ #   echo -e "${GREEN}\n--==[ Checking CORS configuration ]==--${RESET}"
+  #  runBanner "CORScanner"
+   # python $TOOLS_PATH/CORScanner/cors_scan.py -v -t 50 -i $SUB_PATH/final-subdomains.txt | tee $CORS_PATH/final-cors.txt
+    #echo -e "${BLUE}[*] Check the result at $CORS_PATH/final-cors.txt${RESET}"
+#}
 
 
 enumIPs(){
@@ -119,7 +116,7 @@ portScan(){
 visualRecon(){
     echo -e "${GREEN}\n--==[ Taking screenshots ]==--${RESET}"
     runBanner "aquatone"
-    cat $SUB_PATH/final-subdomains.txt | ~/go/bin/aquatone -http-timeout 10000 -scan-timeout 300 -ports xlarge -out $SSHOT_PATH/aquatone/
+    cat $SUB_PATH/final-subdomains.txt | /home/sleem/Projects/work/bin/aquatone -http-timeout 10000 -scan-timeout 300 -ports xlarge -out $SSHOT_PATH/aquatone/
     echo -e "${BLUE}[*] Check the result at $SSHOT_PATH/aquatone/aquatone_report.html${RESET}"
 }
 
@@ -131,7 +128,7 @@ bruteDir(){
     mkdir -p $DIR_PATH/dirsearch
     for url in $(cat $SSHOT_PATH/aquatone/aquatone_urls.txt); do
         fqdn=$(echo $url | sed -e 's;https\?://;;' | sed -e 's;/.*$;;')
-        $TOOLS_PATH/dirsearch/dirsearch.py -b -t 100 -e php,asp,aspx,jsp,html,zip,jar,sql -x 500,503 -r -w $WORDLIST_PATH/raft-large-words.txt -u $url --plain-text-report=$DIR_PATH/dirsearch/$fqdn.tmp
+        $TOOLS_PATH/dirsearch/dirsearch.py -b -t 100 -e txt,php,asp,aspx,jsp,html,zip,jar,sql -x 500,503 -r -w $WORDLIST_PATH/raft-large-words.txt -u $url --plain-text-report=$DIR_PATH/dirsearch/$fqdn.tmp
         if [ ! -s $DIR_PATH/dirsearch/$fqdn.tmp ]; then
             rm $DIR_PATH/dirsearch/$fqdn.tmp
         else
@@ -148,7 +145,7 @@ displayLogo
 checkArgs $TARGET
 setupDir
 enumSubs
-corsScan
+#corsScan
 enumIPs
 portScan
 visualRecon
